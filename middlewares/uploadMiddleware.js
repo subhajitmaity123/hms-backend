@@ -1,22 +1,8 @@
+// middlewares/upload.js
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-const uploadDir = path.join("uploads");
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`;
-    cb(null, uniqueName);
-  },
-});
+// Use memory storage so no files are written to disk (serverless-safe)
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
@@ -29,17 +15,21 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter,
 }).single("file");
 
+// Middleware wrapper that logs and forwards errors
 const uploadMiddleware = (req, res, next) => {
   upload(req, res, (err) => {
-    const {file} = req.files
-    console.log("✅ Incoming file upload:", file);
+    // multer with .single() populates req.file (not req.files)
+    const file = req.file;
+    console.log("✅ Incoming file upload:", file ? file.originalname : "no-file");
     console.log("✅ Request body:", req.body);
+
     if (err) {
       console.error("❌ Upload Error:", err);
+      // multer error types can be more specific, but 400 is reasonable for client errors
       return res.status(400).json({ message: err.message });
     }
     next();
