@@ -13,12 +13,25 @@ import patientRecordsRoute from "./router/patientRecords.js"
 const app = express();
 config({ path: "./config.env" });
 
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  })
-);
+// universal CORS + handle preflight
+app.use((req, res, next) => {
+  const origin = req.headers.origin || "*";
+  // If you rely on cookies, DO NOT use "*" — echo the origin instead:
+  res.header("Access-Control-Allow-Origin", origin);
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, X-Requested-By"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // Preflight
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 
 app.use(cookieParser());
 app.use(express.json());
