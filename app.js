@@ -15,7 +15,7 @@ config({ path: "./config.env" });
 
 // universal CORS + handle preflight
 app.use((req, res, next) => {
-  const origin = req.headers.origin || "*";
+  const origin = req.headers.origin || "https://hms-doctor-dashboard-git-main-subhajitmaity123s-projects.vercel.app/";
   // If you rely on cookies, DO NOT use "*" — echo the origin instead:
   res.header("Access-Control-Allow-Origin", origin);
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
